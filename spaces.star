@@ -20,12 +20,12 @@ checkout.add_repo(
 )
 
 checkout.add_repo(
-    rule = { "name": "tools/sysroot-gh" },
+    rule = {"name": "tools/sysroot-gh"},
     repo = {
         "url": "https://github.com/work-spaces/sysroot-gh",
         "rev": "v2",
-        "checkout": "Revision"
-    }
+        "checkout": "Revision",
+    },
 )
 
 build_output = info.get_absolute_path_to_workspace()
@@ -36,7 +36,7 @@ run.add_exec(
     exec = {
         "command": "cmake",
         "args": ["-Sninja", "-Bbuild/ninja", "-Wno-dev"],
-    }
+    },
 )
 
 run.add_exec(
@@ -69,22 +69,25 @@ deploy_repo = "https://github.com/work-spaces/tools-ninja"
 repo_arg = "--repo={}".format(deploy_repo)
 archive_name = "ninja-v{}".format(version)
 
-run.add_exec(
+run.add_exec_if(
     rule = {"name": "check_release", "deps": ["archive"]},
-    exec = {
-        "command": "gh",
-        "args": [
-            "release",
-            "view",
-            archive_name,
-            repo_arg,
-        ],
-        "expect": "Failure",
+    exec_if = {
+        "if": {
+            "command": "gh",
+            "args": [
+                "release",
+                "view",
+                archive_name,
+                repo_arg,
+            ],
+            "expect": "Failure",
+        },
+        "then": ["create_release"],
     },
 )
 
 run.add_exec(
-    rule = {"name": "create_release", "deps": ["check_release"]},
+    rule = {"name": "create_release", "deps": ["check_release"], "type": "Optional"},
     exec = {
         "command": "gh",
         "args": [
@@ -96,7 +99,6 @@ run.add_exec(
         ],
     },
 )
-
 
 run.add_exec(
     rule = {"name": "upload", "deps": ["create_release"] },
@@ -111,9 +113,3 @@ run.add_exec(
         ],
     },
 )
-
-
-
-
-
-
